@@ -27,9 +27,9 @@
 }
 
 .correct {
-    background: lightgreen;
+    background: rgb(85, 255, 85);
 }
 
 .wrong {
-    background: lightcoral;
+    background: rgb(253, 87, 112);
 }

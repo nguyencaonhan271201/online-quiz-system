@@ -1,0 +1,52 @@
+.question-box {
+    background: rgba(0, 0, 0, .1);
+    border-radius: 5px;
+    height: auto;
+    padding: 10px;
+}
+
+.img-answer, .img-quest {
+    max-width: 70%;
+    height: auto;
+    max-height: 50vh;
+}
+
+.answer-content {
+    padding: 10px;
+    background: rgba(0, 0, 0, .1);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.txt-question {
+    text-align: justify !important;
+}
+
+.chosen {
+    background: rgba(0, 0, 0, .4);
+}
+
+.correct {
+    background: rgb(85, 255, 85);
+}
+
+.wrong {
+    background: rgb(253, 87, 112);
+}
+
+.MuiChip-deletable {
+    margin: 5px;
+}
+
+.MuiPaper-root li {
+    text-decoration: none;
+    list-style: none;
+    display: inline;
+}
+
+.MuiPaper-root {
+    padding: 5px;
+    padding: 0px !important;
+    margin: 0px !important;
+    box-shadow: none !important;
+}
