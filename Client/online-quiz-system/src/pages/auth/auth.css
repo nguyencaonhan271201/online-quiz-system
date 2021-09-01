@@ -1,0 +1,32 @@
+.legend {
+    width: auto
+}
+
+.leftSubGrid {
+    padding-right: 5px;
+}
+
+.rightSubGrid {
+    padding-left: 5px;
+}
+
+.MuiFormLabel-root {
+    z-index: 2 !important;
+    background: white;
+}
+
+.MuiInputLabel-outlined.MuiInputLabel-shrink {
+    transform: translate(14px, -10px) scale(0.75) !important;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+@media screen and (max-width: 960px) {
+    .leftSubGrid {
+        padding-right: 0px;
+    }
+    
+    .rightSubGrid {
+        padding-left: 0px;
+    }
+}

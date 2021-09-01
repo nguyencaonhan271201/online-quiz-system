@@ -1,0 +1,35 @@
+.question-box {
+    background: rgba(0, 0, 0, .1);
+    border-radius: 5px;
+    height: auto;
+    padding: 10px;
+}
+
+.img-answer, .img-quest {
+    max-width: 70%;
+    height: auto;
+    max-height: 50vh;
+}
+
+.answer-content {
+    padding: 10px;
+    background: rgba(0, 0, 0, .1);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.txt-question {
+    text-align: justify !important;
+}
+
+.chosen {
+    background: rgba(0, 0, 0, .4);
+}
+
+.correct {
+    background: lightgreen;
+}
+
+.wrong {
+    background: lightcoral;
+}
