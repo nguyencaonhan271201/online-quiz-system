@@ -184,7 +184,7 @@ function QuestionAddModal(props) {
             getCount++;
 
         //Upload to firebase and retrieve URL 
-        if (getCount != 0) {
+        if (getCount !== 0) {
             if (file) {
                 let fileName = file.name + "-" + Date.now();
                 //questions_images
@@ -286,7 +286,7 @@ function QuestionAddModal(props) {
     }
 
     const keyBoxKeyDown = (e) => {
-        if (e.key == "Enter") {
+        if (e.key === "Enter") {
             e.preventDefault();
             setKeyType1Choices([...keyType1Choices, e.target.value]);
             setType1CurrentInput("");

@@ -3,7 +3,7 @@ import "./quizmain.css";
 import axios from "axios";
 import {AuthContext} from "../../context/AuthContext";
 import {
-    useParams
+    Redirect
 } from "react-router-dom";
 import {Row, Col, Container, ProgressBar, Button, Form} from "react-bootstrap";
 import QuizReview from "./../../components/quiz-review/QuizReview";
@@ -31,6 +31,7 @@ function QuizMain(props) {
     const [markCompleted, setMarkCompleted] = useState(false);
     const [quizReviewModalShow, setQuizReviewModalShow] = useState(false);
     const [quizReviewModal, setQuizReviewModal] = useState(false);
+    const [directToHome, setDirectToHome] = useState(false);
 
     const shuffleArray = (array) => {
         for (var i = array.length - 1; i > 0; i--) {
@@ -258,6 +259,34 @@ function QuizMain(props) {
         }
     }
 
+    const checkAnswerTextFromTimeOut = (mode, answer) => {
+        if (mode === 0) {
+            let getTmpOldAnswers = answersOld;
+            getTmpOldAnswers.push({
+                answer: answer,
+                mark: false,
+                question_id: questions[currentQuest - 1].id,
+                point: 0
+            }) 
+            setAnswered(true);
+            setAnswersOld(getTmpOldAnswers);
+        } else {
+            setAnswered(true);
+            let getTmpOldAnswers = answersOld;
+            getTmpOldAnswers.push({
+                answer: answer,
+                mark: false,
+                question_id: questions[currentQuest - 1].id,
+                point: 0
+            })
+            setAnswersOld(getTmpOldAnswers);
+            let answersList = Buffer(questions[currentQuest - 1].answers[0].answer_content, "base64").toString("utf-8");
+            answersList = answersList.split("~|")
+            setAnswerDisplay(answersList[0].replace("~>", ", ").replace("~+", ", "));
+            setAnswerFieldClass(true);
+        }
+    }
+
     const checkTextAnswer = (answer, key) => {
         key = key.replaceAll("~|", "|");
         let keyArr = key.split("|");
@@ -443,13 +472,10 @@ function QuizMain(props) {
                     setTimeCountDown("00:00");
                     setAnswerFieldClass(true);
                     if (quizTime) {
-                        let getTmpOldAnswers = answersOld;
-                        getTmpOldAnswers.push({
-                            answer: "",
-                            mark: false,
-                            question_id: questions[currentQuest - 1].id
-                        });
-                        setAnswersOld(getTmpOldAnswers);
+                        if (questions[currentQuest - 1].question_type === 0)
+                            checkAnswerTextFromTimeOut(0, -1);
+                        else
+                            checkAnswerTextFromTimeOut(1, "");
                     }
                 }
             }, 1000);
@@ -473,13 +499,10 @@ function QuizMain(props) {
                     setTimeCountDown("00:00");
                     setAnswerFieldClass(true);
                     if (quizTime) {
-                        let getTmpOldAnswers = answersOld;
-                        getTmpOldAnswers[currentQuest - 1] = {
-                            answer: "",
-                            mark: false,
-                            question_id: questions[currentQuest - 1].id
-                        };
-                        setAnswersOld(getTmpOldAnswers);
+                        if (questions[currentQuest - 1].question_type === 0)
+                            checkAnswerTextFromTimeOut(0, -1);
+                        else
+                            checkAnswerTextFromTimeOut(1, "");
                     }
                 }
             }, 1000);
@@ -616,7 +639,7 @@ function QuizMain(props) {
             }
 
             {
-                quizReviewModal && <QuizReview
+                quizReviewModal && <><QuizReview
                     show={quizReviewModalShow}
                     onHide={() => setQuizReviewModalShow(false)}
                     reviewContent={answersOld}
@@ -625,6 +648,14 @@ function QuizMain(props) {
                 >
 
                 </QuizReview>
+                <div className="mt-3 text-center mb-3">
+                    <Button variant="info" className="text-white" onClick={() => setDirectToHome(true)}>Kết thúc</Button>
+                </div>
+                </>
+            }
+
+            {
+                directToHome && <Redirect to="/home"></Redirect>
             }
         </>
     )

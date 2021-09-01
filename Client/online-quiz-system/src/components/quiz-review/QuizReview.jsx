@@ -1,12 +1,13 @@
 import "./quiz-review.css";
 import {React, useState, useEffect, useRef} from 'react'
-import {Container, Row, Col} from "react-bootstrap";
+import {Container, Row, Col, Form} from "react-bootstrap";
 import {Chip, Paper} from '@material-ui/core';
 
 function QuizReview(props) {
     const [markContent, setMarkContent] = useState([]);
     const [questions, setQuestions] = useState([]);
     const [quizInfo, setQuizInfo] = useState([]);
+    const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
         setMarkContent(props.reviewContent);
@@ -15,16 +16,22 @@ function QuizReview(props) {
     }, [])
 
     useEffect(() => {
-        console.log(markContent);
+        if (questions.length > 0) {
+            setLoaded(true);
+            console.log(questions);
+        }
     }, [markContent])
 
     return (
         <>
-            <Container className="mt-3 mb-3">
+            {loaded && <Container className="mt-3 mb-3">
                 <h1 className="text-center">{quizInfo.quiz_title}</h1>
                 <h3 className="text-center">Tạo bởi: {quizInfo.creator}</h3>
-                {questions.map((i, question) => {
-                    <div class="mt-1 mb-1">
+                <h5 className="text-center">Kết quả</h5>
+                {questions.map((question, i) => {
+                    return (
+                    <div key={i} class="mt-3 mb-3">
+                        <h5>Câu {i + 1} - {markContent[i].point}/{question.question_point}</h5>
                         <div className="question-box d-flex justify-content-center align-items-center">
                             <h5 className="txt-quest">{question.question_content}</h5>
                         </div>
@@ -33,14 +40,15 @@ function QuizReview(props) {
                         </div>}
                         {question.question_type == 1 && 
                         <div>
-                            <Form.Control value={answers[i].answer} disabled="true" type="text" className="mt-2" placeholder="Câu trả lời">
+                            <Form.Control value={markContent[i].answer} disabled="true" type="text" className="mt-2" placeholder="Câu trả lời">
                             </Form.Control>
                             <div className="text-center mt-1">
                                 {
                                     <>
-                                    <p>Đáp án:</p>
+                                    <h5>Đáp án:</h5>
                                     <Paper component="ul">
-                                        {question.answers[0].split("~|").map((choice, index) => {
+                                        {Buffer(question.answers[0].answer_content, "base64").toString("utf-8").split("~|")
+                                        .map((choice, index) => {
                                             return (
                                                 <li key={index}>
                                                     <Chip
@@ -52,15 +60,16 @@ function QuizReview(props) {
                                     </Paper>
                                     </>
                                 }
-                                <h5>{Buffer(questions[currentQuest - 1].explanation, "base64").toString("utf-8")}</h5>
+                                <p style={{fontStyle: "italic"}}>Giải thích: {Buffer(question.explanation, "base64").toString("utf-8")}</p>
                             </div>
                         </div>}
                         {question.question_type == 0 && 
+                            <>
                             <Row className="mt-2">
                                 {
                                     question.answers.map((answer, j) => {
                                         let chosen = "";
-                                        if (answer.id !== answers[i].answer) {
+                                        if (answer.id !== markContent[i].answer) {
                                             if (answer.is_correct === 1) {
                                                 chosen = "answer-content text-center correct";
                                             } else {
@@ -84,13 +93,19 @@ function QuizReview(props) {
                                     })
                                 }
                             </Row>
+                            <p style={{fontStyle: "italic"}} className="text-center">Giải thích: {Buffer(question.explanation, "base64").toString("utf-8")}</p>
+                            </>
                         }
-                    </div>
+                    </div>)
                 })
                 }
-            </Container>
+            </Container>}
         </>
     )
 }
 
 export default QuizReview
+
+/*
+                        
+*/

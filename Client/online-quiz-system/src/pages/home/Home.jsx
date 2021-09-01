@@ -143,8 +143,8 @@ export default function Home() {
                     show={modalShowing || passwordModalShowing}
                     >
                     <Modal.Header>  
-                        {modalShowing && "Lỗi"}
-                        {passwordModalShowing && "Nhập mã trận"}
+                        <h5>{modalShowing && "Lỗi"}
+                        {passwordModalShowing && "Nhập mã trận"}</h5>
                     </Modal.Header>
                     <Modal.Body>
                         {modalShowing && error}
