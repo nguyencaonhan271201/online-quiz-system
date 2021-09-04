@@ -1,5 +1,5 @@
 .question-box {
-    background: rgba(0, 0, 0, .1);
+    background: transparent;
     border-radius: 5px;
     height: auto;
     padding: 10px;
@@ -27,11 +27,11 @@
 }
 
 .correct {
-    background: rgb(85, 255, 85);
+    background: lightgreen;
 }
 
 .wrong {
-    background: rgb(253, 87, 112);
+    background: lightcoral;
 }
 
 .MuiChip-deletable {
@@ -49,4 +49,14 @@
     padding: 0px !important;
     margin: 0px !important;
     box-shadow: none !important;
+}
+
+.paper {
+    background: transparent !important;
+}
+
+.question-review-box {
+    background: rgba(0, 0, 0, .04);
+    padding: 20px;
+    border-radius: 5px;
 }

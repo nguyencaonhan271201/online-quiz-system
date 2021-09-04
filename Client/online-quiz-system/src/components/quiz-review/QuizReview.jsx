@@ -18,20 +18,19 @@ function QuizReview(props) {
     useEffect(() => {
         if (questions.length > 0) {
             setLoaded(true);
-            console.log(questions);
         }
     }, [markContent])
 
     return (
         <>
             {loaded && <Container className="mt-3 mb-3">
-                <h1 className="text-center">{quizInfo.quiz_title}</h1>
-                <h3 className="text-center">Tạo bởi: {quizInfo.creator}</h3>
-                <h5 className="text-center">Kết quả</h5>
+                <h2 className="text-center">{quizInfo.quiz_title}</h2>
+                <p className="text-center m-1">Tạo bởi: {quizInfo.creator}</p>
+                {props.name && <h5 className="text-center">{props.name}</h5>}
                 {questions.map((question, i) => {
                     return (
-                    <div key={i} class="mt-3 mb-3">
-                        <h5>Câu {i + 1} - {markContent[i].point}/{question.question_point}</h5>
+                    <div key={i} class="mt-3 mb-3 question-review-box">
+                        <h5 style={{color: markContent[i].point === question.question_point? "green" : "red"}}>Câu {i + 1} - {markContent[i].point}/{question.question_point}</h5>
                         <div className="question-box d-flex justify-content-center align-items-center">
                             <h5 className="txt-quest">{question.question_content}</h5>
                         </div>
@@ -46,7 +45,7 @@ function QuizReview(props) {
                                 {
                                     <>
                                     <h5>Đáp án:</h5>
-                                    <Paper component="ul">
+                                    <Paper component="ul" className="paper">
                                         {Buffer(question.answers[0].answer_content, "base64").toString("utf-8").split("~|")
                                         .map((choice, index) => {
                                             return (

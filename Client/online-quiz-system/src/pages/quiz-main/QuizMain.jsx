@@ -7,6 +7,13 @@ import {
 } from "react-router-dom";
 import {Row, Col, Container, ProgressBar, Button, Form} from "react-bootstrap";
 import QuizReview from "./../../components/quiz-review/QuizReview";
+import PageVisibility from 'react-page-visibility';
+
+//Audio
+import correctAudio from "./../../assets/sounds/right.mp3";
+import wrongAudio from "./../../assets/sounds/wrong.mp3";
+import invalidAudio from "./../../assets/sounds/invalid.mp3";
+import timeThinking from "./../../assets/sounds/time.wav";
 
 function QuizMain(props) {
     const {user} = useContext(AuthContext);
@@ -16,12 +23,15 @@ function QuizMain(props) {
     const [currentQuest, setCurrentQuest] = useState(0);
     const [quizTime, setQuizTime] = useState(false)
     const [time, setTime] = useState(0);
+    const [quizStarted, setQuizStarted] = useState(false);
+    const [quizFinished, setQuizFinished] = useState(false);
     const timerCount = useRef(0);
     const [currentAnswersSet, setCurrentAnswersSet] = useState([]);
     const [timeCountDown, setTimeCountDown] = useState("");
     const [timerCountInterval, setTimerCountInterval] = useState(0);
     const [answerFieldClass, setAnswerFieldClass] = useState(false);
     const [answers, setAnswers] = useState([]);
+    const [acceptingAnswers, setAcceptingAnswers] = useState([]);
     const [answersOld, setAnswersOld] = useState([]);
     const [currentAnswerField, setCurrentAnswerField] = useState("");
     const [answered, setAnswered] = useState(false);
@@ -32,6 +42,8 @@ function QuizMain(props) {
     const [quizReviewModalShow, setQuizReviewModalShow] = useState(false);
     const [quizReviewModal, setQuizReviewModal] = useState(false);
     const [directToHome, setDirectToHome] = useState(false);
+    const [thinkingAudio, setThinkingAudio] = useState(null);
+    const [isVisible, setIsVisible] = useState(true);
 
     const shuffleArray = (array) => {
         for (var i = array.length - 1; i > 0; i--) {
@@ -78,9 +90,8 @@ function QuizMain(props) {
                 details: answersOld
             }
             setQuizReviewModal(true);
-            await axios.post("/quiz/attempt", info)
+            await axios.post("https://online-quiz-system-server.herokuapp.com/api/quiz/attempt", info)
             .then(res => {
-                console.log("Done");
                 setQuizReviewModalShow(true);
             })
             .catch(err => {
@@ -134,10 +145,13 @@ function QuizMain(props) {
                 setCorrectQuestCount(correctQuestCount);
                 setAnswered(true);
                 clearInterval(timerCountInterval);
+                setTimerCountInterval(null);
                 setAnswerFieldClass(true);
                 setMarkCompleted(true);
             }
         }
+        thinkingAudio.pause();
+        setQuizFinished(true);
     }
 
     useEffect(async() => {
@@ -151,9 +165,8 @@ function QuizMain(props) {
                 details: answersOld
             }
             setQuizReviewModal(true);
-            await axios.post("/quiz/attempt", info)
+            await axios.post("https://online-quiz-system-server.herokuapp.com/api/quiz/attempt", info)
             .then(res => {
-                console.log("Done");
                 setQuizReviewModalShow(true);
             })
             .catch(err => {
@@ -162,35 +175,44 @@ function QuizMain(props) {
         }
     }, [markCompleted])
 
-    useEffect(() => {
-        console.log(questions);
-    }, [questions])
-
     const getQuizInfo = async() => {
-        let thisQuizInfo = await axios.get(`/quiz/info/${props.location.state.id}`);
-        console.log(thisQuizInfo);
-        thisQuizInfo = JSON.parse(thisQuizInfo.request.response);
-        setQuizInfo(thisQuizInfo[0]);
-        setQuizTime(thisQuizInfo[0]["quiz_time"] == null);
-        if (thisQuizInfo[0]["quiz_time"] != null) {
-            setTime(parseInt(thisQuizInfo[0]["quiz_time"]))
-            timerCount.current = parseInt(thisQuizInfo[0]["quiz_time"])
-            setTimeCountDown(toHHMMSS(timerCount.current));
-        }
-
-        let listOfQuestions = await axios.get(`/quiz/join/${props.location.state.id}`);
-        listOfQuestions = JSON.parse(listOfQuestions.request.response);
-        if (thisQuizInfo[0]["raw_order"] == 0) {
-            listOfQuestions = await shuffleArray(listOfQuestions);
-        }
-        setQuestions(listOfQuestions);
-
-        if (!quizTime) {
-            for (let i = 0; i < listOfQuestions.length; i++) {
-                answers.push("");
+        await axios.get(`https://online-quiz-system-server.herokuapp.com/api/quiz/info/${props.location.state.id}`)
+        .then(async(res) => {
+            let thisQuizInfo = res.data;
+            setQuizInfo(thisQuizInfo[0]);
+            setQuizTime(thisQuizInfo[0]["quiz_time"] == null);
+            if (thisQuizInfo[0]["quiz_time"] != null) {
+                setTime(parseInt(thisQuizInfo[0]["quiz_time"]))
+                timerCount.current = parseInt(thisQuizInfo[0]["quiz_time"])
+                setTimeCountDown(toHHMMSS(timerCount.current));
             }
-            setAnswers(answers);
-        }
+
+            await axios.get(`https://online-quiz-system-server.herokuapp.com/api/quiz/join/${props.location.state.id}`)
+            .then(async(res1) => {
+                let listOfQuestions = res1.data;
+                if (thisQuizInfo[0]["raw_order"] == 0) {
+                    listOfQuestions = await shuffleArray(listOfQuestions);
+                }
+                setQuestions(listOfQuestions);
+
+                if (!quizTime) {
+                    let tmpValidArray = [];
+                    for (let i = 0; i < listOfQuestions.length; i++) {
+                        answers.push("");
+                        tmpValidArray.push(true);
+                    }
+                    setAnswers(answers);
+                    setAcceptingAnswers(tmpValidArray);
+                }
+            })
+            .catch(err1 => {
+                console.log(err1);
+            });
+        })
+        .catch(err => {
+            console.log(err);
+        });
+        
     }
 
     const checkAnswerMCQ = (answer_id) => {
@@ -212,19 +234,24 @@ function QuizMain(props) {
                             setCorrectQuestCount(correctQuestCount + 1);
                             getTmpOldAnswers[currentQuest - 1].mark = true;
                             getTmpOldAnswers[currentQuest - 1].point = questions[currentQuest - 1].question_point;
-                            break;
+                            new Audio(correctAudio).play();
+                        } else {
+                            new Audio(wrongAudio).play();
                         }
+                        break;
                     }
                 }
                 setAnswersOld(getTmpOldAnswers);
-                console.log(timerCountInterval);
                 clearInterval(timerCountInterval);
+                setTimerCountInterval(null);
             }
         }
         if (!quizTime) {
-            let getTmpAnswer = answers;
-            getTmpAnswer[currentQuest - 1] = answer_id;
-            setAnswers(getTmpAnswer);
+            if (acceptingAnswers[currentQuest - 1]) {
+                let getTmpAnswer = answers;
+                getTmpAnswer[currentQuest - 1] = answer_id;
+                setAnswers(getTmpAnswer);
+            }
         }
     }
 
@@ -250,10 +277,14 @@ function QuizMain(props) {
                         setCorrectQuestCount(correctQuestCount + 1);
                         getTmpOldAnswers[currentQuest - 1].mark = true;
                         getTmpOldAnswers[currentQuest - 1].point = questions[currentQuest - 1].question_point;
+                        new Audio(correctAudio).play();
+                    } else {
+                        new Audio(wrongAudio).play();
                     }
                     setAnswersOld(getTmpOldAnswers);
                     setAnswerFieldClass(true);
                     clearInterval(timerCountInterval);
+                    setTimerCountInterval(null);
                 }
             }
         }
@@ -294,9 +325,6 @@ function QuizMain(props) {
         for (let i = 0; i < keyArr.length; i++) {
             let tmpAnswer = answer.trim().toUpperCase();
             let tmpAnswer1 = tmpAnswer;
-            console.log(tmpAnswer1);
-            console.log(keyArr[i].toUpperCase());
-            console.log(tmpAnswer1 == keyArr[i].toUpperCase())
             if (tmpAnswer1 == keyArr[i].toUpperCase()) {
                 mark = true;
             } else if (keyArr[i].includes("~>")) {
@@ -423,15 +451,65 @@ function QuizMain(props) {
         }
     }
 
+    const visibilityChange = () => {
+        let getCurrent = isVisible;
+        setIsVisible(!isVisible);
+        if (getCurrent) {
+            //Case move to other page
+            if (quizTime && !answered && timerCountInterval && quizStarted && !quizFinished) { 
+                if (questions[currentQuest - 1].question_type === 0)
+                    checkAnswerTextFromTimeOut(0, -1);
+                else
+                    checkAnswerTextFromTimeOut(1, "");
+                let tmpAudio = new Audio(invalidAudio);
+                tmpAudio.volume = 0.3;
+                tmpAudio.play();
+                clearInterval(timerCountInterval);
+                setTimerCountInterval(null);
+            } else if (!quizTime && quizStarted && !quizFinished) {
+                let tmpArray = acceptingAnswers;
+                acceptingAnswers[currentQuest - 1] = false;
+                setAcceptingAnswers(tmpArray);
+                setAnswerFieldClass(true);
+                let getAnswers = [...answers];
+                if (questions[currentQuest - 1].question_type === 1) {
+                    getAnswers[currentQuest - 1] = "";
+                } else {
+                    getAnswers[currentQuest - 1] = -1;
+                }
+                setAnswers(getAnswers);
+                let tmpAudio = new Audio(invalidAudio);
+                tmpAudio.volume = 0.3;
+                tmpAudio.play();
+            }
+        }
+    }
+
     useEffect(() => {
         if (quizInfo.length == 0) {
             getQuizInfo();
         }
+        if (thinkingAudio == null) {
+            setThinkingAudio(new Audio(timeThinking));
+        }
     }, [])
+
+    useEffect(() => {
+        if (thinkingAudio != null) {
+            thinkingAudio.volume = 0.25;
+            thinkingAudio.addEventListener('ended', function () {
+                this.currentTime = 0;
+                setTimeout(() => {
+                    this.play();
+                }, 1000);
+            }, false);
+        }
+    }, [thinkingAudio])
 
     useEffect(() => {
         if (quizTime) {
             clearInterval(timerCountInterval);
+            setTimerCountInterval(null);
             setAnswered(false);
             setAnswerDisplay("");
             setAnswerFieldClass(false);
@@ -444,43 +522,53 @@ function QuizMain(props) {
             setCurrentAnswersSet(getAnswers);
 
             if (!quizTime) {
-                setCurrentAnswerField(answers[currentQuest - 1]);
+                if (acceptingAnswers[currentQuest - 1]) {
+                    setCurrentAnswerField(answers[currentQuest - 1]);
+                    setAnswerFieldClass(false);
+                } else {
+                    setAnswerFieldClass(true);
+                }
             }
         }
         if (currentQuest == 1) {
+            setQuizStarted(true);
             if (quizTime && questions[currentQuest - 1].question_time != null)
             {
-                console.log(questions[currentQuest - 1].question_time)
                 setTime(questions[currentQuest].question_time)
                 timerCount.current = questions[currentQuest].question_time;
                 setTimeCountDown(toHHMMSS(timerCount.current));
             }
 
             let getTime = quizTime? questions[currentQuest - 1].question_time : time;
+            thinkingAudio.play();
 
             if (quizTime)
             {
                 timerCount.current = getTime;
                 setTimeCountDown(toHHMMSS(timerCount.current));
             }
-            let timerCountInterval = setInterval(() => {
-                timerCount.current = timerCount.current - 1;
-                setTimeCountDown(toHHMMSS(timerCount.current));
-                if (timerCount.current == 0) {
-                    clearInterval(timerCountInterval);
-                    timerCount.current = 0;
-                    setTimeCountDown("00:00");
-                    setAnswerFieldClass(true);
-                    if (quizTime) {
-                        if (questions[currentQuest - 1].question_type === 0)
-                            checkAnswerTextFromTimeOut(0, -1);
-                        else
-                            checkAnswerTextFromTimeOut(1, "");
+            if (!timerCountInterval) {
+                let timerCountInterval = setInterval(() => {
+                    timerCount.current = timerCount.current - 1;
+                    setTimeCountDown(toHHMMSS(timerCount.current));
+                    if (timerCount.current == 0) {
+                        clearInterval(timerCountInterval);
+                        setTimerCountInterval(null);
+                        timerCount.current = 0;
+                        setTimeCountDown("00:00");
+                        setAnswerFieldClass(true);
+                        if (quizTime) {
+                            if (questions[currentQuest - 1].question_type === 0)
+                                checkAnswerTextFromTimeOut(0, -1);
+                            else
+                                checkAnswerTextFromTimeOut(1, "");
+                        } else {
+                            finish(0);
+                        }
                     }
-                }
-            }, 1000);
-            setTimerCountInterval(timerCountInterval);
-            console.log(timerCountInterval);
+                }, 1000);
+                setTimerCountInterval(timerCountInterval);
+            }
         } 
         if (currentQuest != 0 && currentQuest != 1 && quizTime) {
             let getTime = quizTime? questions[currentQuest - 1].question_time : time;
@@ -490,47 +578,46 @@ function QuizMain(props) {
                 timerCount.current = getTime;
                 setTimeCountDown(toHHMMSS(timerCount.current));
             }
-            let timerCountInterval = setInterval(() => {
-                timerCount.current = timerCount.current - 1;
-                setTimeCountDown(toHHMMSS(timerCount.current));
-                if (timerCount.current == 0) {
-                    clearInterval(timerCountInterval);
-                    timerCount.current = 0;
-                    setTimeCountDown("00:00");
-                    setAnswerFieldClass(true);
-                    if (quizTime) {
-                        if (questions[currentQuest - 1].question_type === 0)
-                            checkAnswerTextFromTimeOut(0, -1);
-                        else
-                            checkAnswerTextFromTimeOut(1, "");
+            if (!timerCountInterval) {
+                let timerCountInterval = setInterval(() => {
+                    timerCount.current = timerCount.current - 1;
+                    setTimeCountDown(toHHMMSS(timerCount.current));
+                    if (timerCount.current == 0) {
+                        clearInterval(timerCountInterval);
+                        setTimerCountInterval(null);
+                        timerCount.current = 0;
+                        setTimeCountDown("00:00");
+                        setAnswerFieldClass(true);
+                        if (quizTime) {
+                            if (questions[currentQuest - 1].question_type === 0)
+                                checkAnswerTextFromTimeOut(0, -1);
+                            else
+                                checkAnswerTextFromTimeOut(1, "");
+                        }
                     }
-                }
-            }, 1000);
-            setTimerCountInterval(timerCountInterval);
+                }, 1000);
+                setTimerCountInterval(timerCountInterval);
+            }
         }
     }, [currentQuest])
 
     return (
+        <PageVisibility onChange={() => visibilityChange()}>
         <>
             {!quizReviewModal && questions.length == 0 && (<p>Loading Questions</p>)}
             {!quizReviewModal && questions.length != 0 && (
-                <Container className="mt-3 mb-3">
-                    <h1 className="text-center">{quizInfo.quiz_title}</h1>
-                    <h3 className="text-center">Tạo bởi: {quizInfo.creator}</h3>
-                    <Row className="">
-                        <Col lg={4} md={12} sm={12}>
-                            <h5 className="text-center">{user.username}</h5>
-                        </Col>
-                        <Col lg={4} md={6} sm={12}>
-                            <h5 className="text-center">Câu hỏi: {currentQuest}/{questions.length}</h5>
-                        </Col>
-                        <Col lg={4} md={6} sm={12}>
-                            <h5 className="text-center">Điểm: {point}</h5>
-                        </Col>
-                    </Row>
-                    <h5 className="text-center">
-                        Thời gian: {timeCountDown}
-                    </h5>
+                <Container className="mt-3 mb-3 quiz-container">
+                    <h2 className="text-center">{quizInfo.quiz_title}</h2>
+                    <p className="text-center m-1">Tạo bởi: {quizInfo.creator}</p>
+                    <div className="info-block">
+                        <Row className="text-left">
+                            <p className="info">Điểm: {point}</p>
+                            <p className="info">Thời gian: {timeCountDown}</p>
+                        </Row>
+                    </div>
+                    {currentQuest !== 0 && <h5 className="text-center">
+                        Câu hỏi: {currentQuest}/{questions.length}
+                    </h5>}
                     {/* <div className="progress mb-2">
                         <ProgressBar 
                             variant="info"
@@ -545,11 +632,16 @@ function QuizMain(props) {
                     </div>
                     {currentQuest == 0 && (
                         <div className="text-center">
-                            <Button onClick={() => setCurrentQuest(1)} variant="info" className="text-white text-center">Bắt đầu</Button>
+                            <Button onClick={() => setCurrentQuest(1)} variant="info" className="btn-rounded text-white text-center">Bắt đầu</Button>
                         </div>
                     )}
                     {currentQuest != 0 && 
                         <>
+                        {!acceptingAnswers[currentQuest - 1] && 
+                            <div className="mt-1 mb-1 text-center">
+                                <p className="error">Câu hỏi phạm vi. Câu trả lời sẽ không được tính</p>
+                            </div>
+                        }
                         <div className="question-box d-flex justify-content-center align-items-center">
                             <h5 className="txt-quest">{questions[currentQuest - 1].question_content}</h5>
                         </div>
@@ -614,26 +706,26 @@ function QuizMain(props) {
                 <>
                 {!answered && (
                     <div className="text-center">
-                    {currentQuest != 1 && (<Button onClick={() => lastQuest()} variant="info" className="text-white text-center" style={{marginRight: "5px"}}>Trước</Button>)}
-                    {currentQuest != questions.length && (<Button onClick={() => nextQuest()} variant="info" className="text-white text-center ml-1">Tiếp</Button>)}
+                    {currentQuest != 1 && (<Button onClick={() => lastQuest()} variant="info" className="btn-rounded text-white text-center btn-mr" style={{marginRight: "5px"}}>Trước</Button>)}
+                    {currentQuest != questions.length && (<Button onClick={() => nextQuest()} variant="info" className="btn-rounded text-white text-center ml-1">Tiếp</Button>)}
                     </div>
                 )}
-                <div className="text-center mt-2">
-                    <Button onClick={() => finish(0)} variant="info" className="text-white text-center">Hoàn thành</Button>
+                <div className="text-center mt-2 complete-block">
+                    <Button onClick={() => finish(0)} variant="success" className="btn-rounded text-white text-center">Hoàn thành</Button>
                 </div>
                 </>
             )}
             {
                 !quizReviewModal && quizTime && currentQuest != 0 && currentQuest != answers.length && answered && (
                     <div className="text-center">
-                        <Button onClick={() => nextQuest()} variant="info" className="text-white text-center">Tiếp</Button>
+                        <Button onClick={() => nextQuest()} variant="info" className="btn-rounded text-white text-center">Tiếp</Button>
                     </div>
                 )
             }
             {
                 !quizReviewModal && quizTime && answered && currentQuest != 0 && currentQuest == answers.length && (
-                    <div className="text-center mt-2">
-                        <Button onClick={() => finish(1)} variant="info" className="text-white text-center">Hoàn thành</Button>
+                    <div className="text-center mt-2 complete-block">
+                        <Button onClick={() => finish(1)} variant="success" className="btn-rounded text-white text-center">Hoàn thành</Button>
                     </div>
                 )
             }
@@ -645,6 +737,7 @@ function QuizMain(props) {
                     reviewContent={answersOld}
                     questions={questions}
                     quizInfo={quizInfo}
+                    
                 >
 
                 </QuizReview>
@@ -658,6 +751,7 @@ function QuizMain(props) {
                 directToHome && <Redirect to="/home"></Redirect>
             }
         </>
+        </PageVisibility>
     )
 }
 

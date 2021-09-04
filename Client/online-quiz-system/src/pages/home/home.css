@@ -6,3 +6,9 @@
 .card {
     box-shadow: 0 0 4px rgba(0, 0, 0, .4);
 }
+
+@media only screen and (min-width: 1200px) {
+    .quiz-list {
+        max-width: 80vw !important;
+    }
+}

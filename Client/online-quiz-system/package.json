@@ -13,10 +13,17 @@
     "firebase": "^8.3.1",
     "react": "^17.0.2",
     "react-bootstrap": "^1.6.1",
+    "react-bootstrap-table-next": "^4.0.3",
+    "react-bootstrap-table2-paginator": "^2.1.2",
     "react-countdown-circle-timer": "^2.5.4",
+    "react-data-components": "^1.2.0",
     "react-dom": "^17.0.2",
+    "react-hot-loader": "^4.13.0",
+    "react-page-visibility": "^6.4.0",
+    "react-redux": "^7.2.4",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
+    "redux": "^4.1.1",
     "web-vitals": "^1.0.1"
   },
   "scripts": {
@@ -43,5 +50,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:7773/api"
+  "proxy": ""
 }

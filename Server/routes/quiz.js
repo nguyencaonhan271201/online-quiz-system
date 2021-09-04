@@ -3,11 +3,18 @@ const mysql = require('mysql');
 
 const query = require('../helper/query');
 
+// const conn = mysql.createConnection({
+//     host: 'localhost',
+//     user: 'root',
+//     password: '',
+//     database: 'online-quiz-system',
+// });
+
 const conn = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'online-quiz-system'
+    host: 'remotemysql.com',
+    user: 'WSPIdrQDfo',
+    password: 'm2zWYqHv4V',
+    database: 'WSPIdrQDfo',
 });
   
 conn.connect(function(err){
@@ -39,8 +46,8 @@ router.post("/create", async(req, res) => {
                     return res.status(403).send("Mã trận trùng lắp. Vui lòng chọn mã khác");
             } 
 
-            const result = await query(conn, "INSERT INTO quizzes(quiz_title, quiz_mode, quiz_code, quiz_creator, quiz_time, raw_order)" +
-            " VALUES (?, ?, ?, ?, ?, ?)", params);
+            const result = await query(conn, "INSERT INTO quizzes(quiz_title, quiz_mode, quiz_code, quiz_creator, quiz_time, raw_order, date_created)" +
+            " VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", params);
             
             let get_id = result.insertId;
             //Add questions
@@ -58,8 +65,8 @@ router.post("/create", async(req, res) => {
                     question["explain"]
                 ]
                 
-                const result = await query(conn, "INSERT INTO questions(quiz_id, question_raw_id, question_type, question_content, media, question_point, question_time, explanation)" +
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)", quest_params);
+                const result = await query(conn, "INSERT INTO questions(quiz_id, question_raw_id, question_type, question_content, media, question_point, question_time, explanation, date_created)" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", quest_params);
 
                 let get_quest_id = result.insertId;
                 for (let i = 0; i < question["keys"].length; i++) {
@@ -72,8 +79,8 @@ router.post("/create", async(req, res) => {
                         question["keyImages"][i],
                     ]
 
-                    const execute = await query(conn, "INSERT INTO answer_keys(question_id, answer_content, answer_type, answer_subtype, is_correct, media)" +
-                    " VALUES (?, ?, ?, ?, ?, ?)", key_params);
+                    const execute = await query(conn, "INSERT INTO answer_keys(question_id, answer_content, answer_type, answer_subtype, is_correct, media, date_created)" +
+                    " VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", key_params);
                 }
             })
 
@@ -172,7 +179,13 @@ router.post("/join_check", async(req, res) => {
                 .catch(console.log);
                 check = JSON.parse(JSON.stringify(check));
                 if (check.length > 0)
-                    return res.status(403).send("Already joined");
+                    return res.status(403).send("0");
+
+                let check2 = await query(conn, "SELECT * FROM quizzes WHERE id = " + quiz_id + " AND quiz_creator = " + req.body.user_id)
+                .catch(console.log);
+                check2 = JSON.parse(JSON.stringify(check2));
+                if (check2.length > 0)
+                    return res.status(403).send(quiz_id.toString());
 
                 return res.status(200).send(quiz_id.toString())
             }
@@ -180,8 +193,9 @@ router.post("/join_check", async(req, res) => {
             let check = await query(conn, "SELECT * FROM quiz_attempts WHERE quiz_id = " + quiz_id + " AND user_id = " + req.body.user_id)
             .catch(console.log);
             check = JSON.parse(JSON.stringify(check));
+            console.log(check);
             if (check.length > 0)
-                return res.status(403).send("Already joined");
+                return res.status(403).send("0");
 
             return res.status(200).send(quiz_id.toString())
         }      
@@ -232,8 +246,8 @@ router.post("/attempt", async(req, res) => {
             req.body.correct
         ];
         console.log(params);
-        const result = await query(conn, "INSERT INTO quiz_attempts(user_id, quiz_id, point, time, correct)" +
-        " VALUES (?, ?, ?, ?, ?)", params)
+        const result = await query(conn, "INSERT INTO quiz_attempts(user_id, quiz_id, point, time, correct, date_created)" +
+        " VALUES (?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", params)
         .catch(console.log);
         
         let get_id = result.insertId;
@@ -250,13 +264,102 @@ router.post("/attempt", async(req, res) => {
                 detail.point
             ]
             
-            const result = await query(conn, "INSERT INTO quiz_attempt_details(attempt_id, question_id, answer, is_correct, point)" +
-            " VALUES (?, ?, ?, ?, ?)", quest_params)
+            const result = await query(conn, "INSERT INTO quiz_attempt_details(attempt_id, question_id, answer, is_correct, point, date_created)" +
+            " VALUES (?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", quest_params)
             .catch(console.log);
         })
 
         res.status(200).send("Success");
 
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+})
+
+//Get quiz attempts result
+router.post("/get_attempts", async(req, res) => {
+    try {
+        let quiz_id = req.body.quiz_id;
+        let user_id = req.body.user_id;
+        try {
+            //Check if a quiz is of current user
+            let checkQuery = await query(conn, "SELECT * FROM quizzes WHERE id = ? AND quiz_creator = ?", [quiz_id, user_id])
+            .catch(console.log);
+            checkQuery = JSON.parse(JSON.stringify(checkQuery));
+            if (checkQuery.length === 0) {
+                res.status(403).send("You have no authority");
+            }
+
+            //Passed
+            let getAttempts = await query(conn, "SELECT q1.*, (SELECT fullname FROM users u WHERE u.id = q1.user_id) AS candidate_name FROM quiz_attempts q1 WHERE quiz_id = ?", [quiz_id])
+            .catch(console.log);
+            getAttempts = JSON.parse(JSON.stringify(getAttempts));
+            res.status(200).send(getAttempts);
+        } catch (err) {
+            res.status(500).send(err.message);
+        }
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+})
+
+//Get quiz attempts by user_id
+router.post("/my_attempts", async(req, res) => {
+    try {
+        let user_id = req.body.user_id;
+        try {
+            //Passed
+            let getAttempts = await query(conn, "SELECT q1.*, (SELECT fullname FROM users u WHERE u.id = q1.user_id)AS candidate_name, (SELECT quiz_title FROM quizzes q2 WHERE q2.id = q1.quiz_id) AS quiz_name FROM quiz_attempts q1 WHERE user_id = ?", [user_id])
+            .catch(console.log);
+            getAttempts = JSON.parse(JSON.stringify(getAttempts));
+            res.status(200).send(getAttempts);
+        } catch (err) {
+            res.status(500).send(err.message);
+        }
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+})
+
+//Get quiz attempt detail
+router.post("/attempt_detail", async(req, res) => {
+    try {
+        let quiz_id = req.body.quiz_id;
+        let user_id = req.body.user_id;
+        let getAttemptDetails = await query(conn, "SELECT * FROM quiz_attempt_details WHERE attempt_id IN (SELECT id FROM quiz_attempts WHERE user_id = ? AND quiz_id = ?)", [user_id, quiz_id])
+        .catch(console.log);
+        getAttemptDetails = JSON.parse(JSON.stringify(getAttemptDetails));
+
+        let getQuestions = await query(conn, "SELECT * FROM questions WHERE quiz_id = ?", [quiz_id])
+        .catch(console.log);
+        getQuestions = JSON.parse(JSON.stringify(getQuestions));
+        for (let i = 0; i < getQuestions.length; i++) {
+            let question_id = getQuestions[i].id;
+            //Get answer
+            let answers = await query(conn, "SELECT * FROM answer_keys WHERE question_id = " + question_id)
+            .catch(console.log);
+            answers = JSON.parse(JSON.stringify(answers));
+            for (let i = 0; i < answers.length; i++) {
+                answers[i].answer_content = Buffer.from(answers[i].answer_content).toString('base64');
+            }
+            getQuestions[i].explanation = Buffer.from(getQuestions[i].explanation).toString('base64');
+            getQuestions[i]["answers"] = answers;
+        }
+
+        let returnAttemptDetails = []
+        for (let i = 0; i < getQuestions.length; i++) {
+            let getQuestionID = getQuestions[i].id;
+            for (let j = 0; j < getAttemptDetails.length; j++) {
+                if (getAttemptDetails[j].question_id === getQuestionID) {
+                    returnAttemptDetails.push(getAttemptDetails[j]);
+                    break;
+                }
+            }
+        }
+
+        returnAttemptDetails = returnAttemptDetails.concat(getQuestions)
+
+        res.status(200).send(returnAttemptDetails);
     } catch (err) {
         res.status(500).send(err.message);
     }

@@ -19,12 +19,14 @@ import "./auth.css";
 import axios from "axios";
 import {loginCall} from "../../apiCalls";
 import {AuthContext} from "../../context/AuthContext";
+import Logo from "./../../assets/images/ncn.png";
+import Cover from "./../../assets/images/cover.png";
 
 function Copyright() {
     return (
         <Typography variant="body2" color="textSecondary" align="center">
             {'Copyright © '}
-            <Link color="inherit" href="https://personal-site-a0cc2.firebaseapp.com/">
+            <Link color="inherit" href="https://nhannc.site/">
             Nguyen Cao Nhan
             </Link>{' '}
             {new Date().getFullYear()}
@@ -38,7 +40,7 @@ const useStyles = makeStyles((theme) => ({
         height: '100vh',
     },
     image: {
-        backgroundImage: 'url(https://images-na.ssl-images-amazon.com/images/I/71k5kfdB9KL.png)',
+        backgroundImage: `url(${Cover})`,
         backgroundRepeat: 'no-repeat',
         backgroundColor:
         theme.palette.type === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
@@ -105,7 +107,7 @@ export default function Auth() {
                 password: passwordCreate.current.value
             }
             try {
-                await axios.post("/auth/register", user);
+                await axios.post("https://online-quiz-system-server.herokuapp.com/api/auth/register", user);
                 //Perform login
                 loginCall({username: usernameCreate.current.value, password: passwordCreate.current.value}, dispatch);
             } catch (err) {
@@ -119,12 +121,13 @@ export default function Auth() {
         <>
             <Grid container component="main" className={classes.root}>
                 <CssBaseline />
-                <Grid item xs={false} sm={4} md={7} className={classes.image} />
-                <Grid item xs={12} sm={8} md={5} component={Paper} elevation={12} square style={{display: "flex", alignItems: "center"}}>
+                <Grid item xs={false} sm={6} md={7} className={classes.image} />
+                <Grid item xs={12} sm={6} md={5} component={Paper} elevation={12} square style={{display: "flex", alignItems: "center"}}>
                     <div className={classes.paper} style={{width: "100%"}}>
-                        <Avatar className={classes.avatar}>
-                            <LockOutlinedIcon />
-                        </Avatar>
+                        <div className="text-center logo-container">
+                            <img src={Logo}>
+                            </img>
+                        </div>
                         <Typography component="h1" variant="h5">
                             Đăng nhập
                         </Typography>
@@ -163,7 +166,7 @@ export default function Auth() {
                             </Button>
                             <Grid container>
                             <Grid item xs>
-                                <Link href="#" variant="body2">
+                                <Link href="#" variant="body2" style={{opacity: 0}}>
                                     Quên mật khẩu?
                                 </Link>
                             </Grid>

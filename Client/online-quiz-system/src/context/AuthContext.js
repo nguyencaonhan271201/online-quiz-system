@@ -2,19 +2,20 @@ import { createContext, useReducer, useEffect } from "react";
 import AuthReducer from "./AuthReducer";
 
 const INITIAL_STATE = {
-    user: {
-        username: "ncn2k1",
-        password: "123456",
-        id: 1
-    },
+    user: null,
     isFetching: false,
     error: false
 }
 
 export const AuthContext = createContext(INITIAL_STATE);
 export const AuthContextProvider = ({children}) => {
-    const [state, dispatch] = useReducer(AuthReducer, INITIAL_STATE);
-
+    const [state, dispatch] = useReducer(AuthReducer, [], () => {
+        const localData = localStorage.getItem("auth_state");
+        return localData? JSON.parse(localData) : []
+    });
+    useEffect(() => {
+        localStorage.setItem("auth_state", JSON.stringify(state));
+    }, [state])
     return (
         <AuthContext.Provider value = {{
             user: state.user, 

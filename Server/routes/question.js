@@ -4,10 +4,10 @@ const mysql = require('mysql');
 const query = require('../helper/query');
 
 const conn = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'online-quiz-system'
+    host: 'remotemysql.com',
+    user: 'WSPIdrQDfo',
+    password: 'm2zWYqHv4V',
+    database: 'WSPIdrQDfo',
 });
   
 conn.connect(function(err){
@@ -29,8 +29,8 @@ router.post("/question/create", async(req, res) => {
         ]
 
         try {
-            const result = await query(conn, "INSERT INTO questions(quiz_id, question_raw_id, question_type, question_content, media, question_point, question_time)" +
-            " VALUES (?, ?, ?, ?, ?, ?, ?)", params);
+            const result = await query(conn, "INSERT INTO questions(quiz_id, question_raw_id, question_type, question_content, media, question_point, question_time, date_created)" +
+            " VALUES (?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", params);
             res.status(200).send("Question created");
         } catch (err) {
             res.status(500).send(err.message);

@@ -1,15 +1,15 @@
 const router = require('express').Router();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const saltRounds = 10;
 const mysql = require('mysql');
 
 const query = require('./../helper/query');
 
 const conn = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'online-quiz-system'
+    host: 'remotemysql.com',
+    user: 'WSPIdrQDfo',
+    password: 'm2zWYqHv4V',
+    database: 'WSPIdrQDfo',
 });
   
 conn.connect(function(err){
@@ -43,7 +43,7 @@ router.post("/register", async (req, res) => {
         ]
 
         try {
-            const result = await query(conn, "INSERT INTO users(username, password, fullname) VALUES (?, ?, ?)", params);
+            const result = await query(conn, "INSERT INTO users(username, password, fullname, date_created) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", params);
             res.status(200).send("User created");
         } catch (err) {
             res.status(500).send(err.message);
@@ -74,6 +74,7 @@ router.post("/login", async (req, res) => {
             return res.status(400).send("Wrong password");
 
         //Validate correct
+        findAccountResult["password"] = req.body.password;
         res.status(200).json(findAccountResult);
         
     } catch (err) {
@@ -127,5 +128,24 @@ router.put("/edit/:id", async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
+//CHECK ADMIN RIGHT
+router.post("/check-admin", async(req, res) => {
+    //Check for duplicate
+    
+    let findAccountResult = await query(conn, "SELECT * FROM users WHERE username = ? AND role = 1", [req.body.username]).catch(console.log);
+    if (findAccountResult.length == 0)
+        return res.status(404).send("User not found"); 
+
+    findAccountResult = JSON.parse(JSON.stringify(findAccountResult))[0];
+    
+    //Validate password
+    const validPassword = await bcrypt.compare(req.body.password, findAccountResult.password);
+    if (!validPassword)
+        return res.status(400).send("Wrong password");
+
+    //Validate correct
+    res.status(200).json(findAccountResult);
+})
 
 module.exports = router;

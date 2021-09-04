@@ -33,3 +33,48 @@
 .wrong {
     background: rgb(253, 87, 112);
 }
+
+.info-block {
+    padding: 10px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 200px;
+    background: white;
+}
+
+.info {
+    font-size: 18px;
+    margin: 3px;
+    color: black !important;
+}
+
+.error {
+    color: red;
+    font-style: italic;
+}
+
+.complete-block {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+}
+
+@media only screen and (min-width: 1200px) {
+    .quiz-container {
+        max-width: 80vw !important;
+    }
+}
+
+@media only screen and (max-width: 700px) {
+    .info-block {
+        position: relative;
+        text-align: center;
+        width: 100%;
+        padding: 0px;
+    }
+
+    .complete-block {
+        position: relative !important;
+    }
+}

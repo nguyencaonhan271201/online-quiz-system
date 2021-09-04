@@ -5,6 +5,9 @@ import QuestionEditModal from "./../../components/question-edit-modal/QuestionEd
 import {AuthContext} from "../../context/AuthContext";
 import axios from "axios";
 import {Paper, Chip} from "@material-ui/core";
+import {
+    Redirect
+} from "react-router-dom";
 
 //Bootstrap
 import {Container, Col, Row, Form, Button, Modal} from "react-bootstrap";
@@ -30,6 +33,7 @@ export default function QuizCreate() {
     const [rawOrder, setRawOrder] = useState(false);
     const [errorModalShowing, setErrorModalShowing] = useState(false);
     const [error, setError] = useState("");
+    const [redirect, setRedirect] = useState(false);
 
     const onQuizModeChange = (type) => {
         setQuizMode(type);
@@ -51,6 +55,17 @@ export default function QuizCreate() {
     useEffect(() => {
         setNumberOfQuest(questionList.length);
     }, [questionList])
+
+    useEffect(async() => {
+        //Check if is admin
+        await axios.post("https://online-quiz-system-server.herokuapp.com/api/auth/check-admin", user)
+        .then(res => {
+            
+        })
+        .catch(err => {
+            setRedirect(true);
+        })
+    }, []);
 
     const submitQuizDetails = () => {
         //Validate info
@@ -103,9 +118,10 @@ export default function QuizCreate() {
 
         newQuiz["questions"] = cloneQuestionList;
 
-        axios.post("/quiz/create", newQuiz)
+        axios.post("https://online-quiz-system-server.herokuapp.com/api/quiz/create", newQuiz)
         .then(res => {
             //Do nothing
+            setRedirect(true);
         })
         .catch(err => {
             if (err.response.status === 403) {
@@ -121,7 +137,7 @@ export default function QuizCreate() {
     return (
         <div>
             <Container className="p-4">
-                <h1 className="text-center">Tạo Quiz</h1>
+                <h2 className="text-center">Tạo Quiz</h2>
 
                 <Row>
                     <Col md={8} sm={12} className="offset-md-2 offset-sm-0">
@@ -224,9 +240,9 @@ export default function QuizCreate() {
                             </fieldset>
                         </Form>
                         {submittedQuizDetails && (<Row className="mt-2">
-                            <h3 className="text-center">Câu hỏi</h3>
+                            <h4 className="text-center">Câu hỏi</h4>
                             <div className="text-center">
-                                <Button variant="info" style={{paddingLeft: 15, paddingRight: 15}} onClick={() => setAddQuestionModalShow(true)}>
+                                <Button className="btn-rounded" variant="info" style={{paddingLeft: 15, paddingRight: 15}} onClick={() => setAddQuestionModalShow(true)}>
                                     <Add fontSize="small" style={{ color: "white"}}></Add>
                                 </Button>
                             </div>
@@ -333,6 +349,9 @@ export default function QuizCreate() {
                 </Modal>)
             }
 
+            {
+                redirect && <Redirect to="/home"></Redirect>
+            }
         </div>
     )
 }
