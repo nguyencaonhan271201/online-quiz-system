@@ -259,7 +259,7 @@ function QuestionAddModal(props) {
             output["keys"] = [""];
             
             for (let i = 0; i < keyType1Choices.length - 1; i++) {
-                output["keys"][0] += keyType1Choices[i] + "~>";
+                output["keys"][0] += keyType1Choices[i] + "~|";
             }
             output["keys"][0] += keyType1Choices[keyType1Choices.length - 1];
         }

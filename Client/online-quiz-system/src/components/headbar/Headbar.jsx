@@ -20,7 +20,7 @@ function Headbar() {
 
     return (
         <>
-        <Navbar bg="dark" expand="lg" variant="dark">
+        {window.location.pathname !== "/join" && <Navbar bg="dark" expand="lg" variant="dark">
             <Container>
                 <Navbar.Brand href="./home">
                     <img
@@ -28,7 +28,7 @@ function Headbar() {
                         width="40"
                         height="40"
                         className="d-inline-block align-top"
-                        alt="React Bootstrap logo"
+                        alt="NCN Quiz"
                     />
                 </Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -51,7 +51,7 @@ function Headbar() {
                 </Nav>
                 </Navbar.Collapse>
             </Container>
-        </Navbar>
+        </Navbar>}
         </>        
     )
 }

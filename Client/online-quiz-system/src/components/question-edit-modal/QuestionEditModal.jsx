@@ -109,6 +109,8 @@ function QuestionEditModal(props) {
     }
 
     const handleKeyChange = (index, value) => {
+        setType1CurrentInput(value);
+        /*
         let emptyArr = [];
         for (let i = 0; i < keys.length; i++) {
             if (i === index) {
@@ -118,6 +120,7 @@ function QuestionEditModal(props) {
             }
         }
         setKeys(emptyArr);
+        */
     }
 
     const handleKeyImage = (index, file) => {
@@ -130,7 +133,6 @@ function QuestionEditModal(props) {
             }
         }
         setKeyImages(emptyArr);
-        console.log(keyImages);
     }
 
     const setImageNull = (i) => {
@@ -144,7 +146,6 @@ function QuestionEditModal(props) {
 
     const prepareFormSubmit = async(e) => {
         e.preventDefault();
-        console.log(keys);
 
         //Validate info
         if (question === "") {
@@ -263,7 +264,7 @@ function QuestionEditModal(props) {
             output["keys"] = [""];
             
             for (let i = 0; i < keyType1Choices.length - 1; i++) {
-                output["keys"][0] += keyType1Choices[i] + "~>";
+                output["keys"][0] += keyType1Choices[i] + "~|";
             }
             output["keys"][0] += keyType1Choices[keyType1Choices.length - 1];
         }
@@ -320,7 +321,7 @@ function QuestionEditModal(props) {
             setKeyImageUrl(props.questionEditGet["keyImages"]);
             setType1CurrentInput("");
             if (props.questionEditGet["questionType"] === 1) {
-                setKeyType1Choices(props.questionEditGet["keys"][0].split("~>"))
+                setKeyType1Choices(props.questionEditGet["keys"][0].split("~|"))
             }
 
             let emptyArr = [];
@@ -330,7 +331,7 @@ function QuestionEditModal(props) {
 
             setKeyImages(emptyArr);
         }
-    }, []);
+    }, [props.show]);
 
     return (        
         <Modal
@@ -422,7 +423,8 @@ function QuestionEditModal(props) {
                                                     <img className="shareImg" src={keyImages[i] && URL.createObjectURL(keyImages[i])} alt=""/>
                                                     <Cancel className="shareCancelImg" onClick={() => setImageNull(i)}></Cancel>
                                                 </div>
-                                            ) || !keyImages[i] && keyImageUrl[i] !== "" && (
+                                            )}
+                                            {!keyImages[i] && keyImageUrl[i] && keyImageUrl[i] !== "" && (
                                                 <div className="keyImgContainer">
                                                     <img className="shareImg" src={keyImageUrl[i]} alt=""/>
                                                     <Cancel className="shareCancelImg" onClick={() => setImageNull(i)}></Cancel>

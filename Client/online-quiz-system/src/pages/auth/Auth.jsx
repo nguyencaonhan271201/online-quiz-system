@@ -1,5 +1,5 @@
 import React from 'react';
-import {useState, useRef, useContext} from "react";
+import {useState, useRef, useContext, useEffect} from "react";
 import Modal from "react-bootstrap/Modal"
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
@@ -79,7 +79,10 @@ export default function Auth() {
     const [openPopup, setOpenPopup ] = React.useState(false);
     const [loginError, setLoginError] = React.useState("");
     const [registerError, setRegisterError] = React.useState("");
+    const [sentLogin, setSentLogin] = useState(false);
     const {dispatch} = useContext(AuthContext);
+    const {isFetching} = useContext(AuthContext);
+    const {user} = useContext(AuthContext);
     
     //Login refs
     const username = useRef();
@@ -94,7 +97,16 @@ export default function Auth() {
     const handleLogin = async(e) => {
         e.preventDefault();
         loginCall({username: username.current.value, password: password.current.value}, dispatch);
+        setSentLogin(true);
     }
+
+    useEffect(() => {
+        if (!isFetching && sentLogin && (user === null)) {
+            setLoginError("Thông tin đăng nhập không đúng")
+        } else if (user !== null || !sentLogin) {
+            setLoginError("");
+        }
+    }, [isFetching])
 
     const handleRegister = async(e) => {
         e.preventDefault();
@@ -154,7 +166,7 @@ export default function Auth() {
                                 type="password"
                                 inputRef={password}
                             />
-                            <p style={{margin: 0, padding: 0, color: "red", fontStyle: "italic"}}>{loginError}</p>
+                            <p style={{margin: 0, padding: 0, color: "red", fontStyle: "italic", textAlign: "center"}}>{loginError}</p>
                             <Button
                             type="submit"
                             fullWidth
@@ -166,7 +178,7 @@ export default function Auth() {
                             </Button>
                             <Grid container>
                             <Grid item xs>
-                                <Link href="#" variant="body2" style={{opacity: 0}}>
+                                <Link href="#" variant="body2" style={{display: "none"}}>
                                     Quên mật khẩu?
                                 </Link>
                             </Grid>

@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const mysql = require('mysql');
-
+const conn = require('./../helper/conn.js');
 const query = require('../helper/query');
 
 // const conn = mysql.createConnection({
@@ -9,18 +9,6 @@ const query = require('../helper/query');
 //     password: '',
 //     database: 'online-quiz-system',
 // });
-
-const conn = mysql.createConnection({
-    host: 'remotemysql.com',
-    user: 'WSPIdrQDfo',
-    password: 'm2zWYqHv4V',
-    database: 'WSPIdrQDfo',
-});
-  
-conn.connect(function(err){
-    if (err)
-        console.log(err);
-});
 
 //Quiz section
 router.post("/create", async(req, res) => {
@@ -46,8 +34,8 @@ router.post("/create", async(req, res) => {
                     return res.status(403).send("Mã trận trùng lắp. Vui lòng chọn mã khác");
             } 
 
-            const result = await query(conn, "INSERT INTO quizzes(quiz_title, quiz_mode, quiz_code, quiz_creator, quiz_time, raw_order, date_created)" +
-            " VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", params);
+            const result = await query(conn, "INSERT INTO quizzes(quiz_title, quiz_mode, quiz_code, quiz_creator, quiz_time, raw_order)" +
+            " VALUES (?, ?, ?, ?, ?, ?)", params);
             
             let get_id = result.insertId;
             //Add questions
@@ -65,8 +53,8 @@ router.post("/create", async(req, res) => {
                     question["explain"]
                 ]
                 
-                const result = await query(conn, "INSERT INTO questions(quiz_id, question_raw_id, question_type, question_content, media, question_point, question_time, explanation, date_created)" +
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", quest_params);
+                const result = await query(conn, "INSERT INTO questions(quiz_id, question_raw_id, question_type, question_content, media, question_time, question_point, explanation)" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)", quest_params);
 
                 let get_quest_id = result.insertId;
                 for (let i = 0; i < question["keys"].length; i++) {
@@ -76,11 +64,11 @@ router.post("/create", async(req, res) => {
                         question["keys"].length > 1? 0 : 1,
                         i + 1,
                         question["keyCorrects"][i],
-                        question["keyImages"][i],
+                        question["keyImages"][i]? question["keyImages"][i] : "",
                     ]
-
-                    const execute = await query(conn, "INSERT INTO answer_keys(question_id, answer_content, answer_type, answer_subtype, is_correct, media, date_created)" +
-                    " VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", key_params);
+                    console.log(key_params);
+                    const execute = await query(conn, "INSERT INTO answer_keys(question_id, answer_content, answer_type, answer_subtype, is_correct, media)" +
+                    " VALUES (?, ?, ?, ?, ?, ?)", key_params);
                 }
             })
 
@@ -246,8 +234,8 @@ router.post("/attempt", async(req, res) => {
             req.body.correct
         ];
         console.log(params);
-        const result = await query(conn, "INSERT INTO quiz_attempts(user_id, quiz_id, point, time, correct, date_created)" +
-        " VALUES (?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", params)
+        const result = await query(conn, "INSERT INTO quiz_attempts(user_id, quiz_id, point, time, correct)" +
+        " VALUES (?, ?, ?, ?, ?)", params)
         .catch(console.log);
         
         let get_id = result.insertId;
@@ -264,8 +252,8 @@ router.post("/attempt", async(req, res) => {
                 detail.point
             ]
             
-            const result = await query(conn, "INSERT INTO quiz_attempt_details(attempt_id, question_id, answer, is_correct, point, date_created)" +
-            " VALUES (?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", quest_params)
+            const result = await query(conn, "INSERT INTO quiz_attempt_details(attempt_id, question_id, answer, is_correct, point)" +
+            " VALUES (?, ?, ?, ?, ?)", quest_params)
             .catch(console.log);
         })
 

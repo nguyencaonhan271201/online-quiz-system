@@ -604,7 +604,7 @@ function QuizMain(props) {
     return (
         <PageVisibility onChange={() => visibilityChange()}>
         <>
-            {!quizReviewModal && questions.length == 0 && (<p>Loading Questions</p>)}
+            {!quizReviewModal && questions.length == 0 && (<h5 className="text-center mt-3 mb-3">Đang tải câu hỏi</h5>)}
             {!quizReviewModal && questions.length != 0 && (
                 <Container className="mt-3 mb-3 quiz-container">
                     <h2 className="text-center">{quizInfo.quiz_title}</h2>
@@ -642,7 +642,7 @@ function QuizMain(props) {
                                 <p className="error">Câu hỏi phạm vi. Câu trả lời sẽ không được tính</p>
                             </div>
                         }
-                        <div className="question-box d-flex justify-content-center align-items-center">
+                        <div className="question-content-box d-flex justify-content-center align-items-center">
                             <h5 className="txt-quest">{questions[currentQuest - 1].question_content}</h5>
                         </div>
                         {questions[currentQuest - 1].media != "" && <div className="text-center mt-2">
@@ -677,8 +677,8 @@ function QuizMain(props) {
                                         return (
                                             <Col lg={6} md={6} sm={12} className="p-1 answer">
                                                 <div className={chosen} onClick={() => checkAnswerMCQ(answer.id)}>
-                                                    {answer.media != "" && <img className="img-answer" src={answer.media}></img>}
-                                                    {Buffer(answer.answer_content, "base64").toString("utf-8")}
+                                                    {answer.media != "" && <div><img className="img-answer" src={answer.media}></img></div>}
+                                                    <p className="mt-1 mb-0">{Buffer(answer.answer_content, "base64").toString("utf-8")}</p>
                                                 </div>
                                             </Col>
                                         )

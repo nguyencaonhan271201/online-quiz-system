@@ -1,21 +1,8 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const saltRounds = 10;
-const mysql = require('mysql');
-
+const conn = require('./../helper/conn.js');
 const query = require('./../helper/query');
-
-const conn = mysql.createConnection({
-    host: 'remotemysql.com',
-    user: 'WSPIdrQDfo',
-    password: 'm2zWYqHv4V',
-    database: 'WSPIdrQDfo',
-});
-  
-conn.connect(function(err){
-    if (err)
-        console.log(err);
-});
 
 //REGISTER
 router.post("/register", async (req, res) => {
@@ -43,7 +30,7 @@ router.post("/register", async (req, res) => {
         ]
 
         try {
-            const result = await query(conn, "INSERT INTO users(username, password, fullname, date_created) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 HOUR))", params);
+            const result = await query(conn, "INSERT INTO users(username, password, fullname) VALUES (?, ?, ?)", params);
             res.status(200).send("User created");
         } catch (err) {
             res.status(500).send(err.message);

@@ -87,11 +87,31 @@ export default function QuizCreate() {
     }
 
     const editQuestion = (index) => {
+        console.log(index);
         let getQuest = questionList[index];
+        console.log(getQuest);
         getQuest["questIndex"] = index;
         setQuestionEditGet(getQuest);
-        setEditQuestionModalShow(true);
     }
+
+    const deleteQuestion = (index) => {
+        let getQuest = [];
+        for (let i = 0; i < index; i++) {
+            getQuest.push(questionList[i]);
+        }
+        for (let i = index + 1; i < questionList.length; i++) {
+            getQuest.push(questionList[i]);
+        }
+        setQuestionList(getQuest);
+    }
+
+    useEffect(() => {
+        setEditQuestionModalShow(true);
+    }, [questionEditGet])
+
+    useEffect(() => {
+        console.log(questionList);
+    }, [questionList])
 
     const addQuiz = async() => {
         const newQuiz = {
@@ -118,6 +138,7 @@ export default function QuizCreate() {
 
         newQuiz["questions"] = cloneQuestionList;
 
+        //https://online-quiz-system-server.herokuapp.com/api/quiz/create
         axios.post("https://online-quiz-system-server.herokuapp.com/api/quiz/create", newQuiz)
         .then(res => {
             //Do nothing
@@ -233,7 +254,7 @@ export default function QuizCreate() {
                                 </Form.Group>
                                 {!submittedQuizDetails && (<div className="text-center mt-3">
                                     <p className="error">{quizDetailError}</p>
-                                    <Button variant="success" onClick={() => submitQuizDetails()}>
+                                    <Button className="btn-rounded" variant="success" onClick={() => submitQuizDetails()}>
                                         Xác nhận thông tin Quiz
                                     </Button>
                                 </div>)}
@@ -262,7 +283,7 @@ export default function QuizCreate() {
                                                     <>
                                                         <p className="mb-1">Đáp án:</p>
                                                         <Paper component="ul">
-                                                            {quest["keys"][0].split("~>").map((choice, index) => {
+                                                            {quest["keys"][0].split("~|").map((choice, index) => {
                                                                 return (
                                                                     <li key={index}>
                                                                         <Chip
@@ -275,15 +296,15 @@ export default function QuizCreate() {
                                                     </>
                                                 )}
                                                 {quest["questionType"] === 0 && (
-                                                    quest["keys"].map((key, index) => {
+                                                    quest["keys"].map((key, index1) => {
                                                         return (
                                                         <>
-                                                        <p className={quest["keyCorrects"][index]? "correct-key" : "incorrect-key"}>
-                                                            Phương án {index + 1}: {key}
+                                                        <p className={quest["keyCorrects"][index1]? "correct-key" : "incorrect-key"}>
+                                                            Phương án {index1 + 1}: {key}
                                                         </p>
-                                                        {quest["keyImages"][index] !== "" &&
+                                                        {quest["keyImages"][index1] && quest["keyImages"][index1] !== "" &&
                                                             <div className="text-center">
-                                                                <img className="key-image" alt="" src={quest["keyImages"][index]}></img>
+                                                                <img className="key-image" alt="" src={quest["keyImages"][index1]}></img>
                                                             </div>
                                                         }
                                                         </>)
@@ -293,7 +314,8 @@ export default function QuizCreate() {
                                                     <p>Giải thích: {quest["explain"]}</p>
                                                 )}
                                             </div>
-                                            <Button className="mt-1" variant="warning" onClick={() => editQuestion(index)}>Chỉnh sửa</Button>
+                                            <Button className="btn-rounded mt-1" style={{marginRight: "3px"}} variant="danger" onClick={() => deleteQuestion(index)}>Xoá</Button>
+                                            <Button className="btn-rounded mt-1 ml-1" variant="warning" onClick={() => editQuestion(index)}>Chỉnh sửa</Button>
                                         </div>
                                      )
                                 })
@@ -301,7 +323,7 @@ export default function QuizCreate() {
                         </Row>)}
                         {submittedQuizDetails && (
                             <div className="text-center">
-                                <Button variant="success" onClick={() => addQuiz()}>Xác nhận</Button>
+                                <Button className="btn-rounded" variant="success" onClick={() => addQuiz()}>Xác nhận</Button>
                             </div>
                         )}
                     </Col>

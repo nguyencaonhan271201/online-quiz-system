@@ -84,8 +84,8 @@ function QuizReview(props) {
                                         return (
                                             <Col lg={6} md={6} sm={12} className="p-1 answer">
                                                 <div className={chosen}>
-                                                    {answer.media != "" && <img className="img-answer" src={answer.media}></img>}
-                                                    {Buffer(answer.answer_content, "base64").toString("utf-8")}
+                                                    {answer.media != "" && <div><img className="img-answer" src={answer.media}></img></div>}
+                                                    <p className="mt-1 mb-0">{Buffer(answer.answer_content, "base64").toString("utf-8")}</p>
                                                 </div>
                                             </Col>
                                         )

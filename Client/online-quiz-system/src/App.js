@@ -44,47 +44,62 @@ function App() {
 
     return (
         <div>
-        {window.location.pathname !== "/join" && user && <Headbar></Headbar>}
+            {/* {window.location.pathname !== "/join" && user && <Headbar></Headbar>} */}
 
 
-        <Router>
-            <Switch>
-            <Route exact path="/">
-                {user? <Redirect to="/home"></Redirect> : <Auth></Auth>}
-            </Route>
-            <Route exact path="/home">
-                {user? <Home></Home> : <Redirect to="/"></Redirect>}
-            </Route>
-            <Route exact path="/create">
-                {user && user.role === 1? <QuizCreate></QuizCreate> : <Redirect to="/"></Redirect>}
-            </Route>
-            {
-                user && 
-                <>
-                <Route exact path="/join" 
-                    render={(props) => <QuizMain {...props}/>}
-                />
-                <Route exact path="/dashboard" 
-                    render={(props) => <QuizAttempts {...props}></QuizAttempts>}
-                />
-                <Route exact path="/attempts" 
-                    render={(props) => <MyAttempts {...props}></MyAttempts>}
-                />
-                </>
-            }
-            {
-                !user && 
-                <>
-                <Route exact path="/join" 
-                ><Redirect to="/"></Redirect></Route>
-                <Route exact path="/dashboard" 
-                ><Redirect to="/"></Redirect></Route>
-                <Route exact path="/attempts" 
-                ><Redirect to="/"></Redirect></Route>
-                </>
-            }
-            </Switch>
-        </Router>
+            <Router>
+                <Switch>
+                
+                <Route exact path="/">
+                    {user? <Redirect to="/home"></Redirect> : <Auth></Auth>}
+                </Route>
+                {
+                    user && 
+                    <Route exact path="/join" 
+                        render={(props) => <QuizMain {...props}/>}
+                    />
+                }
+                {
+                    !user && 
+                    <Route exact path="/join" 
+                    ><Redirect to="/"></Redirect></Route>
+                }
+                <div>
+                    {window.location.pathname !== "/join" && user && <Headbar></Headbar>}
+                    <Route exact path="/home">
+                        {user? <Home></Home> : <Redirect to="/"></Redirect>}
+                    </Route>
+                    <Route exact path="/create">
+                        {user && user.role === 1? <QuizCreate></QuizCreate> : <Redirect to="/"></Redirect>}
+                    </Route>
+                    {
+                        user && 
+                        <>
+                        <Route exact path="/join" 
+                            render={(props) => <QuizMain {...props}/>}
+                        />
+                        <Route exact path="/dashboard" 
+                            render={(props) => <QuizAttempts {...props}></QuizAttempts>}
+                        />
+                        <Route exact path="/attempts" 
+                            render={(props) => <MyAttempts {...props}></MyAttempts>}
+                        />
+                        </>
+                    }
+                    {
+                        !user && 
+                        <>
+                        <Route exact path="/join" 
+                        ><Redirect to="/"></Redirect></Route>
+                        <Route exact path="/dashboard" 
+                        ><Redirect to="/"></Redirect></Route>
+                        <Route exact path="/attempts" 
+                        ><Redirect to="/"></Redirect></Route>
+                        </>
+                    }
+                </div>  
+                </Switch>
+            </Router>
         </div>
     );
 }
